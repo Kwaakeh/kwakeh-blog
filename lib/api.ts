@@ -12,13 +12,19 @@ function getPostFilenames() {
   return fs.readdirSync(postsDirectory);
 }
 
-async function getAllPosts(): Promise<PostType[]> {
+export function getPostSlugs() {
+  const filenames = getPostFilenames();
+  return filenames.map((filename) => filename.replace(/\.md$/, "")) 
+
+}
+export async function getAllPosts(): Promise<PostType[]> {
   const filenames = getPostFilenames();
   const posts = [];
   for (const filename of filenames) {
     const post = await getPostByFilename(filename);
     posts.push(post);
   }
+  posts.sort((a, b) => (a.date < b.date ? -1 : 1));
   generateNextAndPreviousSlugs(posts);
   return posts;
 }
@@ -39,8 +45,7 @@ async function getPostByFilename(filename: string): Promise<PostType> {
 
 export async function getLatestPost(): Promise<PostType> {
   const posts = await getAllPosts();
-  posts.sort((a, b) => (a.date > b.date ? -1 : 1));
-  const firstPost = posts[0];
+  const firstPost = posts[posts.length-1];
   firstPost.content = await markDownToHtml(firstPost.content);
   return firstPost;
 }
